@@ -1,0 +1,81 @@
+package com.razzaghi.bluetoothchat01.business.datasource.connect_to_other_device
+
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothSocket
+import android.util.Log
+import androidx.lifecycle.MutableLiveData
+import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
+import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
+import java.lang.Exception
+
+
+@SuppressLint("MissingPermission","LongLogTag")
+// @Singleton
+class ConnectToOtherDevice {
+
+    private val TAG = "AppDebug ConnectToOtherDevice"
+
+
+    private val _isConnectToDevice: MutableLiveData<ConnectionState> =
+        MutableLiveData(ConnectionState.None)
+    val isConnectToDevice get() = _isConnectToDevice
+
+
+    /**
+     * if isConnectToDevice == true then make device to get messages and cancelDiscovery from bluetooth adapter TODO()
+     *
+     * */
+
+    private lateinit var bluetoothSocket: BluetoothSocket
+
+
+    fun init(bluetoothDevice: BluetoothDevice, secure: Boolean) {
+        Log.i(TAG, "initBluetoothSocket bluetoothDevice: " + bluetoothDevice)
+        Log.i(TAG, "initBluetoothSocket secure: " + secure)
+        try {
+            bluetoothSocket = if (secure) {
+                bluetoothDevice.createRfcommSocketToServiceRecord(
+                    BluetoothConstants.MY_UUID_SECURE
+                )
+            } else {
+                bluetoothDevice.createInsecureRfcommSocketToServiceRecord(
+                    BluetoothConstants.MY_UUID_INSECURE
+                )
+            }
+            _isConnectToDevice.value = ConnectionState.Inited
+        } catch (e: Exception) {
+            _isConnectToDevice.value = ConnectionState.Failed
+            Log.i(TAG, "init e: " + e.message)
+        }
+    }
+
+
+    fun connect() {
+        Log.i(TAG, "connect: ")
+        try {
+            bluetoothSocket.connect()
+
+            _isConnectToDevice.value = ConnectionState.Connected
+        } catch (e: Exception) {
+            _isConnectToDevice.value = ConnectionState.Failed
+            Log.i(TAG, "connect e: " + e.message)
+        }
+    }
+
+    fun close() {
+        Log.i(TAG, "closeSocket: ")
+        try {
+            bluetoothSocket.close()
+            _isConnectToDevice.value = ConnectionState.Closed
+        } catch (e: Exception) {
+            _isConnectToDevice.value = ConnectionState.Failed
+            Log.i(TAG, "close e: " + e.message)
+        }
+    }
+
+    fun getSocket(): BluetoothSocket {
+        Log.i(TAG, "getSocket: ")
+        return bluetoothSocket
+    }
+}
