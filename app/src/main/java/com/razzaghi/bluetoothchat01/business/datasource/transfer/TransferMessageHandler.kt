@@ -34,25 +34,25 @@ class TransferMessageHandler(
 
     }
 
-    fun start(connectionLost:()->Unit) : ByteArray?{
+    fun start(connectionLost: () -> Unit): ByteArray? {
         Log.i(TAG, "BEGIN mConnectedThread")
         val buffer = ByteArray(1024)
         var bytes: Int
 
-       return try {
+        return try {
             // Read from the InputStream
             bytes = mmInStream?.read(buffer) ?: 0
 
 
-           buffer
+            buffer
         } catch (e: IOException) {
             Log.e(TAG, "disconnected", e)
             connectionLost()
-           null
+            null
         }
     }
 
-    fun write(buffer: ByteArray): ByteArray?{
+    fun write(buffer: ByteArray): ByteArray? {
         return try {
             mmOutStream?.write(buffer)
 
