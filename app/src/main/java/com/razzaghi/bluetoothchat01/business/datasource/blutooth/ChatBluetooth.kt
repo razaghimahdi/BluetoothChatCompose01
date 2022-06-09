@@ -3,8 +3,6 @@ package com.razzaghi.bluetoothchat01.business.datasource.blutooth
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
-import androidx.lifecycle.MutableLiveData
-import com.razzaghi.bluetoothchat01.business.domain.BluetoothState
 
 interface ChatBluetooth {
 
@@ -31,9 +29,11 @@ interface ChatBluetooth {
 
     suspend fun stop()
 
+    suspend fun write(out: ByteArray)
+
 
     suspend fun connectionFailed()
 
-    suspend fun connectionLost()
+      fun connectionLost()
 
 }

@@ -3,6 +3,7 @@ package com.razzaghi.bluetoothchat01.business.datasource.connect_from_other_devi
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
+import android.bluetooth.BluetoothSocket
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
@@ -13,7 +14,10 @@ import java.io.IOException
 class ConnectFromOtherDevice {
 
     private val TAG = "AppDebug ConnectFromOtherDevice"
-    private lateinit var bluetoothServerSocket: BluetoothServerSocket
+    private lateinit var bluetoothSecureServerSocket: BluetoothServerSocket
+    private lateinit var bluetoothInSecureServerSocket: BluetoothServerSocket
+    private lateinit var bluetoothSecureSocket: BluetoothSocket
+    private lateinit var bluetoothInSecureSocket: BluetoothSocket
 
 
     private val _isConnectFromDevice: MutableLiveData<ConnectionState> =
@@ -29,22 +33,18 @@ class ConnectFromOtherDevice {
      * */
 
 
-    fun init(bluetoothAdapter: BluetoothAdapter, secure: Boolean) {
+    fun init(bluetoothAdapter: BluetoothAdapter) {
         Log.i(TAG, "init bluetoothAdapter: " + bluetoothAdapter)
-        Log.i(TAG, "init secure: " + secure)
         try {
 
-            bluetoothServerSocket =
-                if (secure) {
-                    bluetoothAdapter.listenUsingRfcommWithServiceRecord(
-                        BluetoothConstants.NAME_SECURE,
-                        BluetoothConstants.MY_UUID_SECURE
-                    )
-                } else {
-                    bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(
-                        BluetoothConstants.NAME_INSECURE, BluetoothConstants.MY_UUID_INSECURE
-                    )
-                }
+            bluetoothSecureServerSocket = bluetoothAdapter.listenUsingRfcommWithServiceRecord(
+                BluetoothConstants.NAME_SECURE,
+                BluetoothConstants.MY_UUID_SECURE
+            )
+            bluetoothInSecureServerSocket =
+                bluetoothAdapter.listenUsingInsecureRfcommWithServiceRecord(
+                    BluetoothConstants.NAME_INSECURE, BluetoothConstants.MY_UUID_INSECURE
+                )
 
             _isConnectFromDevice.value = ConnectionState.Inited
         } catch (e: Exception) {
@@ -57,22 +57,38 @@ class ConnectFromOtherDevice {
 
     fun accept() {
         try {
-            bluetoothServerSocket.accept()
+            bluetoothSecureSocket = bluetoothSecureServerSocket.accept()
+            bluetoothInSecureSocket = bluetoothInSecureServerSocket.accept()
             _isConnectFromDevice.value = ConnectionState.Connected
             Log.i(TAG, "accept: ")
         } catch (e: Exception) {
             Log.i(TAG, "accept e: " + e.message)
             _isConnectFromDevice.value = ConnectionState.Failed
+            close()
         }
     }
 
-    fun getServerSocket(): BluetoothServerSocket {
-        return bluetoothServerSocket
+    fun getSecureServerSocket(): BluetoothServerSocket {
+        return bluetoothSecureServerSocket
+    }
+
+    fun getInSecureServerSocket(): BluetoothServerSocket {
+        return bluetoothInSecureServerSocket
+    }
+
+    fun getSecureSocket(): BluetoothSocket {
+        Log.i(TAG, "getSecureSocket: ")
+        return bluetoothSecureSocket
+    }
+    fun getInSecureSocket(): BluetoothSocket {
+        Log.i(TAG, "getInSecureSocket: ")
+        return bluetoothInSecureSocket
     }
 
     fun close() {
         try {
-            bluetoothServerSocket.close()
+            bluetoothSecureServerSocket.close()
+            bluetoothInSecureServerSocket.close()
             _isConnectFromDevice.value = ConnectionState.Closed
             Log.i(TAG, "close: ")
         } catch (e: Exception) {
@@ -80,5 +96,8 @@ class ConnectFromOtherDevice {
             _isConnectFromDevice.value = ConnectionState.Failed
         }
     }
+
+    fun currentStateIsNotFailed() = isConnectFromDevice.value != ConnectionState.Failed
+    fun currentStateIsConnected() = isConnectFromDevice.value == ConnectionState.Connected
 
 }

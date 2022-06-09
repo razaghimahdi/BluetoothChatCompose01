@@ -1,6 +1,7 @@
 package com.razzaghi.bluetoothchat01.business.datasource.connect_to_other_device
 
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
@@ -10,7 +11,7 @@ import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 import java.lang.Exception
 
 
-@SuppressLint("MissingPermission","LongLogTag")
+@SuppressLint("MissingPermission", "LongLogTag")
 // @Singleton
 class ConnectToOtherDevice {
 
@@ -30,9 +31,17 @@ class ConnectToOtherDevice {
     private lateinit var bluetoothSocket: BluetoothSocket
 
 
-    fun init(bluetoothDevice: BluetoothDevice, secure: Boolean) {
+    fun init(
+        bluetoothDevice: BluetoothDevice,
+        secure: Boolean,
+        bluetoothAdapter: BluetoothAdapter
+    ) { // bluetoothDevice comes from UI
         Log.i(TAG, "initBluetoothSocket bluetoothDevice: " + bluetoothDevice)
         Log.i(TAG, "initBluetoothSocket secure: " + secure)
+
+        // Always cancel discovery because it will slow down a connection
+        bluetoothAdapter.cancelDiscovery()
+
         try {
             bluetoothSocket = if (secure) {
                 bluetoothDevice.createRfcommSocketToServiceRecord(
@@ -60,6 +69,7 @@ class ConnectToOtherDevice {
         } catch (e: Exception) {
             _isConnectToDevice.value = ConnectionState.Failed
             Log.i(TAG, "connect e: " + e.message)
+            close()
         }
     }
 
@@ -78,4 +88,9 @@ class ConnectToOtherDevice {
         Log.i(TAG, "getSocket: ")
         return bluetoothSocket
     }
+
+    fun currentStateIsNotFailed() = isConnectToDevice.value != ConnectionState.Failed
+
+    fun currentStateIsConnected() = isConnectToDevice.value == ConnectionState.Connected
+
 }

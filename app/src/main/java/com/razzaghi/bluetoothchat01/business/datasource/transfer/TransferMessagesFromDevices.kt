@@ -1,17 +1,11 @@
 package com.razzaghi.bluetoothchat01.business.datasource.transfer
 
 import android.annotation.SuppressLint
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.util.Log
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
-import com.razzaghi.bluetoothchat01.business.domain.BluetoothState
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
-import java.io.IOException
+import com.razzaghi.bluetoothchat01.business.util.SocketTools.toCustomString
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -27,15 +21,15 @@ class TransferMessagesFromDevices {
 
     private lateinit var bluetoothSocket: BluetoothSocket
 
-    private lateinit var mmInStream: InputStream
-    private lateinit var mmOutStream: OutputStream
+    private lateinit var inputStream: InputStream
+    private lateinit var outputStream: OutputStream
 
     fun init(bluetoothSocket: BluetoothSocket) {
         Log.i(TAG, "init bluetoothSocket: " + bluetoothSocket)
         try {
             this.bluetoothSocket = bluetoothSocket
-            mmInStream = this.bluetoothSocket.inputStream
-            mmOutStream = this.bluetoothSocket.outputStream
+            inputStream = this.bluetoothSocket.inputStream
+            outputStream = this.bluetoothSocket.outputStream
 
             _isMessageTransferring.value = ConnectionState.Inited
         } catch (e: Exception) {
@@ -56,34 +50,40 @@ class TransferMessagesFromDevices {
         }
     }
 
-    fun write(buffer: ByteArray): ByteArray? {
+    fun write(buffer: ByteArray): String? {
         return try {
-            mmOutStream.write(buffer)
+            outputStream.write(buffer)
             // _isMessageTransferring.value = ConnectionState.Wrote
 
-            buffer
+            buffer.toCustomString()
         } catch (e: Exception) {
             _isMessageTransferring.value = ConnectionState.Failed
             Log.i(TAG, "write e: " + e.message)
+            close()
             null
         }
     }
 
-    fun run(): ByteArray? {
+    fun read(): String? {
         Log.i(TAG, "run")
         val buffer = ByteArray(1024)
         var bytes: Int
 
         return try {
             // Read from the InputStream
-            bytes = mmInStream.read(buffer) ?: 0
+            bytes = inputStream.read(buffer) ?: 0
+            _isMessageTransferring.value = ConnectionState.Connected
+            return inputStream.bufferedReader().use { it.readText() }  // defaults to UTF-8
 
-            buffer
+            //buffer.toCustomString()
         } catch (e: Exception) {
             _isMessageTransferring.value = ConnectionState.Failed
             Log.i(TAG, "run e: " + e.message)
+            close()
             null
         }
     }
+
+    fun currentStateIsNotFailed() = isMessageTransferring.value != ConnectionState.Failed
 
 }
