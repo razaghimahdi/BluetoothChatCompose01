@@ -14,7 +14,7 @@ import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 
 @SuppressLint("LongLogTag", "MissingPermission")
 class ChatBluetoothManager02(
-    private val bluetoothAdapter: BluetoothAdapter,
+      val bluetoothAdapter: BluetoothAdapter,
 ) {
 
     private val TAG = "AppDebug ChatBluetoothImpl"

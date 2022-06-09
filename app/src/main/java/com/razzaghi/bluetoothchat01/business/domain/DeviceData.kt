@@ -1,9 +1,5 @@
 package com.razzaghi.bluetoothchat01.business.domain
 
-/**
- * Created by ramankit on 20/7/17.
- */
-
 data class DeviceData(val deviceName: String,
                       val deviceHardwareAddress: String){
 
