@@ -10,7 +10,7 @@ object BluetoothTools {
     private val TAG = "AppDebug BluetoothTools"
 
     @SuppressLint("MissingPermission")
-    fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): List<DeviceData> {
+    fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): ArrayList<DeviceData> {
 
         Log.i(TAG, "getPairedDevices: ")
 
