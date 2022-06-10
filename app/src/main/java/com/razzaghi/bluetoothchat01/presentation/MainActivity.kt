@@ -17,6 +17,7 @@ import androidx.navigation.NavHostController
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
 import com.razzaghi.bluetoothchat01.presentation.screen.main.MainScreen
 import com.razzaghi.bluetoothchat01.presentation.screen.main.MainViewModel
@@ -70,7 +71,7 @@ class MainActivity : BaseActivity() {
     private fun NavGraphBuilder.addMainScreen(
         navController: NavHostController,
         width: Int,
-        chatBluetoothManager: ChatBluetoothManager02
+        chatBluetoothManager: ChatBluetoothManager
     ) {
 
         composable(

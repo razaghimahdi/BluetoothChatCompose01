@@ -33,9 +33,12 @@ import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
 import com.razzaghi.bluetoothchat01.business.domain.DeviceData
 import com.razzaghi.bluetoothchat01.business.util.BluetoothTools.getPairedDevices
 import com.razzaghi.bluetoothchat01.presentation.MainActivity
+import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.BluetoothManagerEvent
+import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
 import com.razzaghi.bluetoothchat01.presentation.getActivity
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
@@ -57,11 +60,17 @@ fun MainScreen(
     state: MainState,
     events: (MainEvents) -> Unit,
     navigateToChatScreen: () -> Unit,
-    chatBluetoothManager: ChatBluetoothManager02,
+    chatBluetoothManager: ChatBluetoothManager,
 ) {
 
 
-    DefaultScreenUI(isLoading = state.isLoading) {
+    DefaultScreenUI(
+        isLoading = state.isLoading,
+        queue = chatBluetoothManager.state.errorQueue,
+        onRemoveHeadFromQueue = {
+            chatBluetoothManager.onTriggerEvent(BluetoothManagerEvent.OnRemoveHeadFromQueue)
+        }
+    ) {
 
         // TODO(Show user bluetooth is on or off)
 
@@ -102,10 +111,16 @@ fun MainScreen(
             activity?.startActivity(discoverableIntent)
         }
 
+
+        if (chatBluetoothManager.state.bluetoothConnectionState == BluetoothConnectionState.Connected) {
+            navigateToChatScreen()
+        }
+
+
         StatelessMainScreen(
             state = state,
             events = events,
-            navigateToChatScreen = navigateToChatScreen,
+            chatBluetoothManager = chatBluetoothManager
         )
 
     }
@@ -116,7 +131,7 @@ fun MainScreen(
 fun StatelessMainScreen(
     state: MainState,
     events: (MainEvents) -> Unit,
-    navigateToChatScreen: () -> Unit,
+    chatBluetoothManager: ChatBluetoothManager,
 ) {
     Box {
         Column() {
@@ -167,7 +182,19 @@ fun StatelessMainScreen(
                     items(state.pairedDevices) { device ->
                         DeviceListItem(
                             device = device,
-                            onSelect = navigateToChatScreen,
+                            onSelect = {
+                                connectDevice(
+                                    device,
+                                    chatBluetoothManager.bluetoothAdapter
+                                ) { device, secure ->
+                                    chatBluetoothManager.onTriggerEvent(
+                                        BluetoothManagerEvent.ConnectToOtherDevice(
+                                            device,
+                                            secure
+                                        )
+                                    )
+                                }
+                            },
                         )
                     }
 
@@ -193,7 +220,19 @@ fun StatelessMainScreen(
                     items(state.searchedDevices) { device ->
                         DeviceListItem(
                             device = device,
-                            onSelect = navigateToChatScreen,
+                            onSelect = {
+                                connectDevice(
+                                    device,
+                                    chatBluetoothManager.bluetoothAdapter
+                                ) { device, secure ->
+                                    chatBluetoothManager.onTriggerEvent(
+                                        BluetoothManagerEvent.ConnectToOtherDevice(
+                                            device,
+                                            secure
+                                        )
+                                    )
+                                }
+                            },
                         )
                     }
 
@@ -205,6 +244,27 @@ fun StatelessMainScreen(
         }
     }
 }
+
+
+@SuppressLint("MissingPermission")
+private fun connectDevice(
+    deviceData: DeviceData,
+    bluetoothAdapter: BluetoothAdapter,
+    connectCallback: (BluetoothDevice, Boolean) -> Unit
+) {
+
+    Log.i(TAG, "connectDevice deviceData: "+deviceData)
+
+    // Cancel discovery because it's costly and we're about to connect
+    bluetoothAdapter.cancelDiscovery()
+    val deviceAddress = deviceData.deviceHardwareAddress
+
+    val device = bluetoothAdapter.getRemoteDevice(deviceAddress)
+
+    // Attempt to connect to the device
+    connectCallback(device, true)
+}
+
 
 @Composable
 fun InitLauncherForActivityResult(

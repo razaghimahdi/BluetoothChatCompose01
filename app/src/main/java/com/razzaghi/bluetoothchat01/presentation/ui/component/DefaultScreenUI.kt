@@ -2,10 +2,7 @@ package com.razzaghi.bluetoothchat01.presentation.ui.component
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.*
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
@@ -17,13 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import com.razzaghi.bluetoothchat01.business.core.Queue
+import com.razzaghi.bluetoothchat01.business.domain.Dialog
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable
 fun DefaultScreenUI(
     isLoading: Boolean,
+    queue: Queue<Dialog> = Queue(mutableListOf()),
+    onRemoveHeadFromQueue: () -> Unit,
     content: @Composable () -> Unit,
-) {
+    ) {
 
         val scaffoldState = rememberScaffoldState()
         Scaffold(
@@ -35,6 +36,18 @@ fun DefaultScreenUI(
                     .background(MaterialTheme.colors.background)
             ) {
                 content()
+
+                if (!queue.isEmpty()) {
+                    queue.peek()?.let { uiComponent ->
+                        GenericDialog(
+                            modifier = Modifier
+                                .fillMaxWidth(0.9f),
+                            title = uiComponent.title,
+                            description = uiComponent.description,
+                            onRemoveHeadFromQueue = onRemoveHeadFromQueue
+                        )
+                    }
+                }
 
                 if (isLoading) {
                     CircularIndeterminateProgressBar()

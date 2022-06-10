@@ -1,5 +1,7 @@
 package com.razzaghi.bluetoothchat01.business.constatnts
 
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.util.*
 
 object BluetoothConstants {
@@ -15,6 +17,9 @@ object BluetoothConstants {
 
     const val BLUETOOTH_SOCKET_TYPE_SECURE = "Secure"
     const val BLUETOOTH_SOCKET_TYPE_INSECURE = "Insecure"
+
+      val DEFAULT_OUTPUT_STREAM =  ByteArrayOutputStream(1024)
+      val DEFAULT_INPUT_STREAM =  ByteArrayInputStream(ByteArray(1024))
 
 
 

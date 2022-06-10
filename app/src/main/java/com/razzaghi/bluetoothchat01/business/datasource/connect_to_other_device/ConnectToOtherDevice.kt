@@ -8,6 +8,8 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.lang.Exception
 
 
@@ -31,7 +33,7 @@ class ConnectToOtherDevice {
     private lateinit var bluetoothSocket: BluetoothSocket
 
 
-    fun init(
+    suspend fun init(
         bluetoothDevice: BluetoothDevice,
         secure: Boolean,
         bluetoothAdapter: BluetoothAdapter
@@ -52,34 +54,46 @@ class ConnectToOtherDevice {
                     BluetoothConstants.MY_UUID_INSECURE
                 )
             }
-            _isConnectToDevice.value = ConnectionState.Inited
+            withContext(Dispatchers.Main){
+                _isConnectToDevice.value = ConnectionState.Inited
+            }
         } catch (e: Exception) {
-            _isConnectToDevice.value = ConnectionState.Failed
+            withContext(Dispatchers.Main) {
+                _isConnectToDevice.value = ConnectionState.Failed
+            }
             Log.i(TAG, "init e: " + e.message)
         }
     }
 
 
-    fun connect() {
+    suspend fun connect() {
         Log.i(TAG, "connect: ")
         try {
             bluetoothSocket.connect()
 
-            _isConnectToDevice.value = ConnectionState.Connected
+            withContext(Dispatchers.Main) {
+                _isConnectToDevice.value = ConnectionState.Connected
+            }
         } catch (e: Exception) {
-            _isConnectToDevice.value = ConnectionState.Failed
+            withContext(Dispatchers.Main) {
+                _isConnectToDevice.value = ConnectionState.Failed
+            }
             Log.i(TAG, "connect e: " + e.message)
-            close()
+
         }
     }
 
-    fun close() {
+    suspend fun close() {
         Log.i(TAG, "closeSocket: ")
         try {
             bluetoothSocket.close()
-            _isConnectToDevice.value = ConnectionState.Closed
+            withContext(Dispatchers.Main) {
+                _isConnectToDevice.value = ConnectionState.Closed
+            }
         } catch (e: Exception) {
-            _isConnectToDevice.value = ConnectionState.Failed
+            withContext(Dispatchers.Main) {
+                _isConnectToDevice.value = ConnectionState.Failed
+            }
             Log.i(TAG, "close e: " + e.message)
         }
     }

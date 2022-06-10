@@ -3,11 +3,13 @@ package com.razzaghi.bluetoothchat01.presentation.bluetooth_manager
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
 
 sealed class BluetoothManagerEvent {
 
     data class ConnectToOtherDevice(val bluetoothDevice: BluetoothDevice, val secure: Boolean) :
         BluetoothManagerEvent()
+
 
     data class ConnectFromOtherDevice(val bluetoothAdapter: BluetoothAdapter ) :
         BluetoothManagerEvent()
@@ -16,6 +18,7 @@ sealed class BluetoothManagerEvent {
 
     data class WriteFromTransferring(val message: ByteArray) : BluetoothManagerEvent()
 
+    object OnRemoveHeadFromQueue : BluetoothManagerEvent()
 
     object Start : BluetoothManagerEvent()
 

@@ -5,16 +5,20 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import com.razzaghi.bluetoothchat01.business.core.Queue
 import com.razzaghi.bluetoothchat01.business.datasource.connect_from_other_device.ConnectFromOtherDevice
 import com.razzaghi.bluetoothchat01.business.datasource.connect_to_other_device.ConnectToOtherDevice
 import com.razzaghi.bluetoothchat01.business.datasource.transfer.TransferMessagesFromDevices
-import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
-import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
+import com.razzaghi.bluetoothchat01.business.domain.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 @SuppressLint("LongLogTag", "MissingPermission")
 class ChatBluetoothManager02(
-      val bluetoothAdapter: BluetoothAdapter,
+    val bluetoothAdapter: BluetoothAdapter,
 ) {
 
     private val TAG = "AppDebug ChatBluetoothImpl"
@@ -23,9 +27,11 @@ class ChatBluetoothManager02(
     private var connectToOtherDevice: ConnectToOtherDevice? = null
     private var connectFromOtherDevice: ConnectFromOtherDevice? = null
 
-    private val state: MutableLiveData<BluetoothManagerState> =
-        MutableLiveData(BluetoothManagerState())
+    private val _state: MutableState<BluetoothManagerState> =
+        mutableStateOf(BluetoothManagerState())
+    val state get() = _state.value
 
+    private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
     fun onTriggerEvent(event: BluetoothManagerEvent) {
         when (event) {
@@ -53,6 +59,9 @@ class ChatBluetoothManager02(
             is BluetoothManagerEvent.Start -> {
                 start()
             }
+            is BluetoothManagerEvent.OnRemoveHeadFromQueue -> {
+                removeHeadMessage()
+            }
         }
     }
 
@@ -61,9 +70,20 @@ class ChatBluetoothManager02(
 
     }
 
+    private fun updateBluetoothConnectionState(bluetoothConnectionState: BluetoothConnectionState) {
+        _state.value = _state.value.copy(bluetoothConnectionState = bluetoothConnectionState)
+    }
+
     private fun writeFromTransferring(message: ByteArray) {
         transferMessagesFromDevices?.apply {
-            if (this.currentStateIsNotFailed()) addedToMessageList(this.write(message))
+            if (this.currentStateIsNotFailed()) {
+                updateBluetoothConnectionState(BluetoothConnectionState.Connected)
+                addedToMessageList(this.write(message))
+            } else {
+                updateBluetoothConnectionState(BluetoothConnectionState.None)
+                onTriggerEvent(BluetoothManagerEvent.Start)
+                appendToMessageQueue(FAILED_Write_messages_DIALOG)
+            }
         }
     }
 
@@ -74,14 +94,15 @@ class ChatBluetoothManager02(
                 this.close()
             }
             this.init(bluetoothSocket = bluetoothSocket)
-            if (this.currentStateIsNotFailed()) addedToMessageList(this.read())
-            checkIfReadingMessagesFromSocketFailed(value = this.isMessageTransferring.value == ConnectionState.Failed)
-        }
-    }
-
-    private fun checkIfReadingMessagesFromSocketFailed(value: Boolean) {
-        if (value) {
-            onTriggerEvent(BluetoothManagerEvent.Start)
+            if (this.currentStateIsNotFailed()) {
+                updateBluetoothConnectionState(BluetoothConnectionState.Connected)
+                addedToMessageList(this.read())
+            }
+            if (!this.currentStateIsNotFailed()) {
+                updateBluetoothConnectionState(BluetoothConnectionState.None)
+                onTriggerEvent(BluetoothManagerEvent.Start)
+                appendToMessageQueue(FAILED_Read_messages_DIALOG)
+            }
         }
     }
 
@@ -97,38 +118,49 @@ class ChatBluetoothManager02(
                 onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = this.getSecureSocket()))
                 onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = this.getInSecureSocket()))
             }
+
+            if (!this.currentStateIsNotFailed()) {
+                appendToMessageQueue(FAILED_From_Connect_DIALOG)
+            }
         }
 
     }
 
     private fun makeConnectToOtherDevice(bluetoothDevice: BluetoothDevice, secure: Boolean) {
-        connectToOtherDevice = ConnectToOtherDevice()
-        connectToOtherDevice?.apply {
-            this.init(
-                bluetoothDevice = bluetoothDevice,
-                secure = secure,
-                bluetoothAdapter = bluetoothAdapter
-            )
-            if (this.currentStateIsNotFailed()) this.connect()
-            if (this.currentStateIsConnected()) {
-                onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = this.getSocket()))
+        coroutineScope.launch {
+
+            connectToOtherDevice = ConnectToOtherDevice()
+            connectToOtherDevice?.apply {
+                if (this.currentStateIsConnected()) {
+                    this.close()
+                }
+                this.init(
+                    bluetoothDevice = bluetoothDevice,
+                    secure = secure,
+                    bluetoothAdapter = bluetoothAdapter
+                )
+                if (this.currentStateIsNotFailed()) this.connect()
+                if (this.currentStateIsConnected()) {
+                    onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = this.getSocket()))
+                }
+                if (!this.currentStateIsNotFailed()) {
+                    appendToMessageQueue(FAILED_To_Connect_DIALOG)
+                }
+
             }
 
-
         }
-
     }
 
-
     private fun addedToMessageList(message: String?) {
-        val currentList = state.value?.messagesList ?: arrayListOf()
+        val currentList = _state.value?.messagesList ?: arrayListOf()
         Log.i(TAG, "addedToMessageList message  : " + message)
         if (message != null) {
             currentList.add(message)
         } else {
             currentList.add("Unknown Message")
         }
-        state.value = state.value?.copy(messagesList = currentList)
+        _state.value = _state.value.copy(messagesList = currentList)
     }
 
     private fun start() {
@@ -136,4 +168,22 @@ class ChatBluetoothManager02(
     }
 
 
+    private fun appendToMessageQueue(uiComponent: Dialog) {
+        val queue = _state.value.errorQueue
+        queue.add(uiComponent)
+        _state.value = _state.value.copy(errorQueue = Queue(mutableListOf())) // force recompose
+        _state.value = _state.value.copy(errorQueue = queue)
+    }
+
+    private fun removeHeadMessage() {
+        try {
+            val queue = _state.value.errorQueue
+            queue.remove() // can throw exception if empty
+            _state.value =
+                _state.value.copy(errorQueue = Queue(mutableListOf())) // force recompose
+            _state.value = _state.value.copy(errorQueue = queue)
+        } catch (e: Exception) {
+            Log.i(TAG, "removeHeadMessage: Nothing to remove from DialogQueue")
+        }
+    }
 }
