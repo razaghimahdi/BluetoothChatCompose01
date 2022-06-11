@@ -1,4 +1,4 @@
-package com.razzaghi.bluetoothchat01.business.domain
+package com.razzaghi.bluetoothchat01.business.core
 
 data class Dialog(
     val title: String,

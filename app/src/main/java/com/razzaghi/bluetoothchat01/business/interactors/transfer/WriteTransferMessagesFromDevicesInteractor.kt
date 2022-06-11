@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
+import com.razzaghi.bluetoothchat01.business.core.DataState
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 import com.razzaghi.bluetoothchat01.business.util.SocketTools.toCustomString
 import kotlinx.coroutines.flow.Flow
@@ -22,15 +24,21 @@ class WriteTransferMessagesFromDevicesInteractor {
     fun execute(
         buffer: ByteArray,
         outputStream: OutputStream,
-    ) : Flow<String> = flow{
+    ): Flow<DataState<String>> = flow {
         Log.i(TAG, "execute: ")
         try {
+            emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
             outputStream.write(buffer)
 
-            emit(buffer.toCustomString())
+            val message = buffer.toCustomString()
+
+            emit(DataState.Data(ConnectionState.Connected, message))
+
         } catch (e: Exception) {
             Log.i(TAG, "execute e: " + e.message)
-            emit(ConnectionState.Failed.toString())
+            emit(DataState.Data(ConnectionState.Failed))
+        } finally {
+            emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
         }
     }
 }

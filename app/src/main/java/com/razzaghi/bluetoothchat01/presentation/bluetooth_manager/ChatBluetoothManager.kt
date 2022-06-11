@@ -8,10 +8,10 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.razzaghi.bluetoothchat01.business.core.Dialog
+import com.razzaghi.bluetoothchat01.business.core.*
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.core.Queue
-import com.razzaghi.bluetoothchat01.business.datasource.connect_from_other_device.ConnectFromOtherDevice
-import com.razzaghi.bluetoothchat01.business.datasource.connect_to_other_device.ConnectToOtherDevice
-import com.razzaghi.bluetoothchat01.business.datasource.transfer.TransferMessagesFromDevices
 import com.razzaghi.bluetoothchat01.business.domain.*
 import com.razzaghi.bluetoothchat01.business.interactors.connect_from_other_device.AcceptFromOtherDeviceInteractor
 import com.razzaghi.bluetoothchat01.business.interactors.connect_from_other_device.CloseFromOtherDeviceInteractor
@@ -32,7 +32,7 @@ import java.io.InputStream
 import java.io.OutputStream
 
 @SuppressLint("LongLogTag", "MissingPermission")
-class ChatBluetoothManager (
+class ChatBluetoothManager(
     val bluetoothAdapter: BluetoothAdapter,
     val closeTransferMessagesFromDevicesInteractor: CloseTransferMessagesFromDevicesInteractor,
     val initTransferMessagesFromDevicesInteractor: InitTransferMessagesFromDevicesInteractor,
@@ -56,6 +56,9 @@ class ChatBluetoothManager (
 
     fun onTriggerEvent(event: BluetoothManagerEvent) {
         when (event) {
+            is BluetoothManagerEvent.UpdateProgressBarState -> {
+                updateProgressBarState(value = event.value)
+            }
             is BluetoothManagerEvent.ReadFromTransferring -> {
                 readFromTransferring(
                     bluetoothSocket = event.bluetoothSocket,
@@ -97,27 +100,45 @@ class ChatBluetoothManager (
 
     private fun writeFromTransferring(message: ByteArray) {
 
-        writeTransferMessagesFromDevicesInteractor.execute(message, state.outputStream).onEach {
-            if (it != ConnectionState.Failed.toString()) {
-                updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                addedToMessageList(it)
-            } else {
-                TransferringMessageHasBeenFailed(FAILED_Write_messages_DIALOG)
-            }
-        }.launchIn(coroutineScope)
+        writeTransferMessagesFromDevicesInteractor.execute(message, state.outputStream)
+            .onEach { dataState ->
 
+                when (dataState) {
+                    is DataState.Data -> {
+                        if (dataState.connectionState != ConnectionState.Failed) {
+                            updateBluetoothConnectionState(BluetoothConnectionState.Connected)
+                            addedToMessageList(dataState.data)
+                        } else {
+                            TransferringMessageHasBeenFailed(FAILED_Write_messages_DIALOG)
+                        }
+                    }
+                    is DataState.Loading -> {
+                        _state.value =
+                            _state.value.copy(progressBarState = dataState.progressBarState)
+                    }
+                }
+            }.launchIn(coroutineScope)
     }
 
     private fun readFromTransferring(bluetoothSocket: BluetoothSocket) {
         initTransferMessagesFromDevices(bluetoothSocket = bluetoothSocket) {
-            readTransferMessagesFromDevicesInteractor.execute(state.inputStream).onEach {
-                if (it != ConnectionState.Failed.toString()) {
-                    updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                    addedToMessageList(it)
-                } else {
-                    TransferringMessageHasBeenFailed(FAILED_Read_messages_DIALOG)
-                }
-            }.launchIn(coroutineScope)
+            readTransferMessagesFromDevicesInteractor.execute(state.inputStream)
+                .onEach { dataState ->
+                    when (dataState) {
+                        is DataState.Data -> {
+                            if (dataState.connectionState != ConnectionState.Failed) {
+                                updateBluetoothConnectionState(BluetoothConnectionState.Connected)
+                                addedToMessageList(dataState.data)
+                            } else {
+                                TransferringMessageHasBeenFailed(FAILED_Read_messages_DIALOG)
+                            }
+                        }
+                        is DataState.Loading -> {
+                            _state.value =
+                                _state.value.copy(progressBarState = dataState.progressBarState)
+                        }
+                    }
+                }.launchIn(coroutineScope)
         }
     }
 
@@ -125,14 +146,26 @@ class ChatBluetoothManager (
         bluetoothSocket: BluetoothSocket,
         onFinish: () -> Unit
     ) {
-        initTransferMessagesFromDevicesInteractor.execute(bluetoothSocket).onEach {
-            if (it != null) {
-                updateOutputStream(outputStream = bluetoothSocket.outputStream)
-                updateInputStream(inputStream = bluetoothSocket.inputStream)
-                onFinish()
-            } else {
-                TransferringMessageHasBeenFailed(FAILED_to_init_transferring_DIALOG)
+        initTransferMessagesFromDevicesInteractor.execute(bluetoothSocket).onEach { dataState ->
+
+            when (dataState) {
+                is DataState.Data -> {
+
+                    if (dataState.data != null) {
+                        updateOutputStream(outputStream = bluetoothSocket.outputStream)
+                        updateInputStream(inputStream = bluetoothSocket.inputStream)
+                        onFinish()
+                    } else {
+                        TransferringMessageHasBeenFailed(FAILED_to_init_transferring_DIALOG)
+                    }
+
+                }
+                is DataState.Loading -> {
+                    _state.value =
+                        _state.value.copy(progressBarState = dataState.progressBarState)
+                }
             }
+
         }.launchIn(coroutineScope)
     }
 
@@ -142,40 +175,51 @@ class ChatBluetoothManager (
         appendToMessageQueue(dialog)
     }
 
-    private fun updateInputStream(inputStream: InputStream?) {
-        inputStream?.let {
-            _state.value = _state.value.copy(inputStream = inputStream)
-        }
-    }
-
-    private fun updateOutputStream(outputStream: OutputStream?) {
-        outputStream?.let {
-            _state.value = _state.value.copy(outputStream = outputStream)
-        }
-    }
-
     private fun makeConnectFromOtherDevice(bluetoothAdapter: BluetoothAdapter) {
 
 
         initConnectFromOtherDevice(bluetoothAdapter = bluetoothAdapter, secure = true) {
-            acceptFromOtherDeviceInteractor.execute(it).onEach {
-                if (it != null) {
-                    onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = it))
-                } else {
-                    appendToMessageQueue(FAILED_From_Connect_DIALOG)
+            acceptFromOtherDeviceInteractor.execute(it).onEach { dataState ->
+                when (dataState) {
+                    is DataState.Data -> {
+                        if (dataState.data != null) {
+                            onTriggerEvent(
+                                BluetoothManagerEvent.ReadFromTransferring(
+                                    bluetoothSocket = dataState.data
+                                )
+                            )
+                        } else {
+                            appendToMessageQueue(FAILED_From_Connect_DIALOG)
+                        }
+                    }
+                    is DataState.Loading -> {
+                        _state.value =
+                            _state.value.copy(progressBarState = dataState.progressBarState)
+                    }
                 }
-
             }.launchIn(coroutineScope)
         }
 
-        initConnectFromOtherDevice(bluetoothAdapter = bluetoothAdapter, secure = false) {
-            acceptFromOtherDeviceInteractor.execute(it).onEach {
-                if (it != null) {
-                    onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = it))
-                } else {
-                    appendToMessageQueue(FAILED_From_Connect_DIALOG)
-                }
 
+        initConnectFromOtherDevice(bluetoothAdapter = bluetoothAdapter, secure = false) {
+            acceptFromOtherDeviceInteractor.execute(it).onEach { dataState ->
+                when (dataState) {
+                    is DataState.Data -> {
+                        if (dataState.data != null) {
+                            onTriggerEvent(
+                                BluetoothManagerEvent.ReadFromTransferring(
+                                    bluetoothSocket = dataState.data
+                                )
+                            )
+                        } else {
+                            appendToMessageQueue(FAILED_From_Connect_DIALOG)
+                        }
+                    }
+                    is DataState.Loading -> {
+                        _state.value =
+                            _state.value.copy(progressBarState = dataState.progressBarState)
+                    }
+                }
             }.launchIn(coroutineScope)
         }
 
@@ -187,12 +231,19 @@ class ChatBluetoothManager (
         secure: Boolean,
         onFinish: (BluetoothServerSocket) -> Unit
     ) {
-        initFromOtherDeviceInteractor.execute(bluetoothAdapter, secure).onEach {
-            if (it != null) {
-                //  updateBluetoothServerSocket(bluetoothServerSocket = it)
-                onFinish(it)
-            } else {
-                appendToMessageQueue(FAILED_From_Init_Connect_DIALOG)
+        initFromOtherDeviceInteractor.execute(bluetoothAdapter, secure).onEach { dataState ->
+            when (dataState) {
+                is DataState.Data -> {
+                    if (dataState.data != null) {
+                        onFinish(dataState.data)
+                    } else {
+                        appendToMessageQueue(FAILED_From_Init_Connect_DIALOG)
+                    }
+                }
+                is DataState.Loading -> {
+                    _state.value =
+                        _state.value.copy(progressBarState = dataState.progressBarState)
+                }
             }
         }.launchIn(coroutineScope)
     }
@@ -205,19 +256,28 @@ class ChatBluetoothManager (
             bluetoothAdapter = bluetoothAdapter
         ) { bluetoothSocket ->
 
-            connectToOtherDeviceInteractor.execute(bluetoothSocket = bluetoothSocket).onEach {
-                if (it == ConnectionState.Connected) {
-                    onTriggerEvent(BluetoothManagerEvent.ReadFromTransferring(bluetoothSocket = bluetoothSocket))
-                } else {
-                    appendToMessageQueue(FAILED_To_Connect_DIALOG)
-                }
-
-            }.launchIn(coroutineScope)
-
+            connectToOtherDeviceInteractor.execute(bluetoothSocket = bluetoothSocket)
+                .onEach { dataState ->
+                    when (dataState) {
+                        is DataState.Data -> {
+                            if (dataState.connectionState == ConnectionState.Connected) {
+                                onTriggerEvent(
+                                    BluetoothManagerEvent.ReadFromTransferring(
+                                        bluetoothSocket = bluetoothSocket
+                                    )
+                                )
+                            } else {
+                                appendToMessageQueue(FAILED_To_Connect_DIALOG)
+                            }
+                        }
+                        is DataState.Loading -> {
+                            _state.value =
+                                _state.value.copy(progressBarState = dataState.progressBarState)
+                        }
+                    }
+                }.launchIn(coroutineScope)
 
         }
-
-
     }
 
 
@@ -231,14 +291,34 @@ class ChatBluetoothManager (
             bluetoothDevice = bluetoothDevice,
             secure = secure,
             bluetoothAdapter = bluetoothAdapter
-        ).onEach {
-            if (it != null) {
-                //  updateBluetoothServerSocket(bluetoothServerSocket = it)
-                onFinish(it)
-            } else {
-                appendToMessageQueue(FAILED_To_Init_Connect_DIALOG)
+        ).onEach { dataState ->
+            when (dataState) {
+                is DataState.Data -> {
+                    if (dataState.data != null) {
+                        onFinish(dataState.data)
+                    } else {
+                        appendToMessageQueue(FAILED_To_Init_Connect_DIALOG)
+                    }
+                }
+                is DataState.Loading -> {
+                    _state.value =
+                        _state.value.copy(progressBarState = dataState.progressBarState)
+                }
             }
         }.launchIn(coroutineScope)
+    }
+
+
+    private fun updateInputStream(inputStream: InputStream?) {
+        inputStream?.let {
+            _state.value = _state.value.copy(inputStream = inputStream)
+        }
+    }
+
+    private fun updateOutputStream(outputStream: OutputStream?) {
+        outputStream?.let {
+            _state.value = _state.value.copy(outputStream = outputStream)
+        }
     }
 
 
@@ -257,6 +337,10 @@ class ChatBluetoothManager (
         onTriggerEvent(BluetoothManagerEvent.ConnectFromOtherDevice(bluetoothAdapter = bluetoothAdapter))
     }
 
+
+    private fun updateProgressBarState(value: ProgressBarState) {
+        _state.value = _state.value.copy(progressBarState = value)
+    }
 
     private fun appendToMessageQueue(uiComponent: Dialog) {
         val queue = _state.value.errorQueue

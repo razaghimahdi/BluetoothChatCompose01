@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
+import com.razzaghi.bluetoothchat01.business.core.DataState
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -21,20 +23,15 @@ class InitConnectToOtherDeviceInteractor {
         bluetoothDevice: BluetoothDevice,
         secure: Boolean,
         bluetoothAdapter: BluetoothAdapter
-    ) : Flow<BluetoothSocket?> = flow{
+    ): Flow<DataState<BluetoothSocket>> = flow {
         Log.i(TAG, "execute: ")
         try {
-         //   thread{
-
-           /*  kotlin.runCatching {
-
-             }*/
-
+            emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
 
             // Always cancel discovery because it will slow down a connection
             bluetoothAdapter.cancelDiscovery()
 
-          val  bluetoothSocket = if (secure) {
+            val bluetoothSocket = if (secure) {
                 bluetoothDevice.createRfcommSocketToServiceRecord(
                     BluetoothConstants.MY_UUID_SECURE
                 )
@@ -44,13 +41,14 @@ class InitConnectToOtherDeviceInteractor {
                 )
             }
 
-        //}
 
-            emit(bluetoothSocket)
+            emit(DataState.Data(ConnectionState.Inited, bluetoothSocket))
 
         } catch (e: Exception) {
             Log.i(TAG, "execute e: " + e.message)
-            emit(null)
+            emit(DataState.Data(ConnectionState.Failed))
+        } finally {
+            emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
         }
 
 

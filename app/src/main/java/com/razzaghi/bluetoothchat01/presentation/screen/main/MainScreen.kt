@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
 import com.razzaghi.bluetoothchat01.business.domain.DeviceData
 import com.razzaghi.bluetoothchat01.business.util.BluetoothTools.getPairedDevices
@@ -65,7 +66,10 @@ fun MainScreen(
 
 
     DefaultScreenUI(
-        isLoading = state.isLoading,
+        isLoading = checkIsLoading(
+            state.progressBarState,
+            chatBluetoothManager.state.progressBarState
+        ),
         queue = chatBluetoothManager.state.errorQueue,
         onRemoveHeadFromQueue = {
             chatBluetoothManager.onTriggerEvent(BluetoothManagerEvent.OnRemoveHeadFromQueue)
@@ -127,6 +131,13 @@ fun MainScreen(
 
 }
 
+fun checkIsLoading(
+    progressBarState01: ProgressBarState,
+    progressBarState02: ProgressBarState,
+): Boolean {
+    return progressBarState01 == ProgressBarState.Loading || progressBarState02 == ProgressBarState.Loading
+}
+
 @Composable
 fun StatelessMainScreen(
     state: MainState,
@@ -138,7 +149,7 @@ fun StatelessMainScreen(
 
             Row(modifier = Modifier.fillMaxWidth()) {
                 Button(onClick = {
-                    events(MainEvents.UpdateIsLoading(true))
+                    events(MainEvents.UpdateProgressBarState(ProgressBarState.Loading))
                     events(MainEvents.UpdateShouldBluetoothStartScan(true))
 
                 }) {
@@ -183,16 +194,22 @@ fun StatelessMainScreen(
                         DeviceListItem(
                             device = device,
                             onSelect = {
-                                connectDevice(
-                                    device,
-                                    chatBluetoothManager.bluetoothAdapter
-                                ) { device, secure ->
-                                    chatBluetoothManager.onTriggerEvent(
-                                        BluetoothManagerEvent.ConnectToOtherDevice(
-                                            device,
-                                            secure
-                                        )
+                                if (!checkIsLoading(
+                                        state.progressBarState,
+                                        chatBluetoothManager.state.progressBarState
                                     )
+                                ) {
+                                    connectDevice(
+                                        device,
+                                        chatBluetoothManager.bluetoothAdapter
+                                    ) { device, secure ->
+                                        chatBluetoothManager.onTriggerEvent(
+                                            BluetoothManagerEvent.ConnectToOtherDevice(
+                                                device,
+                                                secure
+                                            )
+                                        )
+                                    }
                                 }
                             },
                         )
@@ -221,16 +238,22 @@ fun StatelessMainScreen(
                         DeviceListItem(
                             device = device,
                             onSelect = {
-                                connectDevice(
-                                    device,
-                                    chatBluetoothManager.bluetoothAdapter
-                                ) { device, secure ->
-                                    chatBluetoothManager.onTriggerEvent(
-                                        BluetoothManagerEvent.ConnectToOtherDevice(
-                                            device,
-                                            secure
-                                        )
+                                if (!checkIsLoading(
+                                        state.progressBarState,
+                                        chatBluetoothManager.state.progressBarState
                                     )
+                                ) {
+                                    connectDevice(
+                                        device,
+                                        chatBluetoothManager.bluetoothAdapter
+                                    ) { device, secure ->
+                                        chatBluetoothManager.onTriggerEvent(
+                                            BluetoothManagerEvent.ConnectToOtherDevice(
+                                                device,
+                                                secure
+                                            )
+                                        )
+                                    }
                                 }
                             },
                         )
@@ -253,7 +276,7 @@ private fun connectDevice(
     connectCallback: (BluetoothDevice, Boolean) -> Unit
 ) {
 
-    Log.i(TAG, "connectDevice deviceData: "+deviceData)
+    Log.i(TAG, "connectDevice deviceData: " + deviceData)
 
     // Cancel discovery because it's costly and we're about to connect
     bluetoothAdapter.cancelDiscovery()
@@ -344,7 +367,7 @@ fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastReceiver {
 
             if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED == action) {
                 Log.i(TAG, "onReceive ACTION_DISCOVERY_FINISHED: ")
-                events(MainEvents.UpdateIsLoading(false))
+                events(MainEvents.UpdateProgressBarState(ProgressBarState.Idle))
                 // TODO(Show user bluetooth has been searched)
             }
         }

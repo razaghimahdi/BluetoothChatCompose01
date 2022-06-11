@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.util.Log
+import com.razzaghi.bluetoothchat01.business.core.DataState
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -16,16 +18,19 @@ class CloseFromOtherDeviceInteractor {
     val TAG = "AppDebug CloseFromOtherDeviceInteractor"
 
     @SuppressLint("MissingPermission", "LongLogTag")
-    fun execute(bluetoothSecureSocket: BluetoothServerSocket) : Flow<ConnectionState> = flow{
+    fun execute(bluetoothSecureSocket: BluetoothServerSocket) : Flow<DataState<ConnectionState>> = flow{
         Log.i(TAG, "execute: ")
         try {
+            emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
 
             bluetoothSecureSocket.accept()
-            emit(ConnectionState.Connected)
 
+            emit(DataState.Data(ConnectionState.Closed))
         } catch (e: Exception) {
             Log.i(TAG, "execute e: " + e.message)
-            emit(ConnectionState.Failed)
+            emit(DataState.Data(ConnectionState.Failed))
+        } finally {
+            emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
         }
     }
 

@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.razzaghi.bluetoothchat01.business.core.Dialog
+import com.razzaghi.bluetoothchat01.business.core.*
 import com.razzaghi.bluetoothchat01.business.core.Queue
 import com.razzaghi.bluetoothchat01.business.datasource.connect_from_other_device.ConnectFromOtherDevice
 import com.razzaghi.bluetoothchat01.business.datasource.connect_to_other_device.ConnectToOtherDevice

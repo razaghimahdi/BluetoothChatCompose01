@@ -15,7 +15,8 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import com.razzaghi.bluetoothchat01.business.core.Queue
-import com.razzaghi.bluetoothchat01.business.domain.Dialog
+import com.razzaghi.bluetoothchat01.business.core.Dialog
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter")
 @Composable

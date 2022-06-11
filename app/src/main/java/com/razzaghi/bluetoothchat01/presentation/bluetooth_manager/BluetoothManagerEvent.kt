@@ -3,9 +3,13 @@ package com.razzaghi.bluetoothchat01.presentation.bluetooth_manager
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
+import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
 
 sealed class BluetoothManagerEvent {
+
+    data class UpdateProgressBarState(val value: ProgressBarState) : BluetoothManagerEvent()
 
     data class ConnectToOtherDevice(val bluetoothDevice: BluetoothDevice, val secure: Boolean) :
         BluetoothManagerEvent()

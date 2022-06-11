@@ -6,6 +6,8 @@ import android.bluetooth.BluetoothServerSocket
 import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
+import com.razzaghi.bluetoothchat01.business.core.DataState
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -17,10 +19,11 @@ class InitFromOtherDeviceInteractor {
     val TAG = "AppDebug InitFromOtherDeviceInteractor"
 
     @SuppressLint("MissingPermission", "LongLogTag")
-    fun execute(bluetoothAdapter: BluetoothAdapter, secure: Boolean): Flow<BluetoothServerSocket?> =
+    fun execute(bluetoothAdapter: BluetoothAdapter, secure: Boolean): Flow<DataState<BluetoothServerSocket>> =
         flow {
             Log.i(TAG, "execute: ")
             try {
+                emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
 
                 val bluetoothSecureServerSocket =
                     if (secure) bluetoothAdapter.listenUsingRfcommWithServiceRecord(
@@ -30,11 +33,12 @@ class InitFromOtherDeviceInteractor {
                         BluetoothConstants.NAME_INSECURE, BluetoothConstants.MY_UUID_INSECURE
                     )
 
-                emit(bluetoothSecureServerSocket)
-
+                emit(DataState.Data(ConnectionState.Inited, bluetoothSecureServerSocket))
             } catch (e: Exception) {
                 Log.i(TAG, "execute e: " + e.message)
-                emit(null)
+                emit(DataState.Data(ConnectionState.Failed))
+            } finally {
+                emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
             }
         }
 

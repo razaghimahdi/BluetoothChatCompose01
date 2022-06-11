@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
 import com.razzaghi.bluetoothchat01.business.domain.DeviceData
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainState
@@ -26,8 +27,8 @@ class MainViewModel : ViewModel() {
             is MainEvents.AddToSearchedDevice -> {
                 addToSearchedDevice(item = event.item)
             }
-            is MainEvents.UpdateIsLoading -> {
-                updateIsLoading(value = event.value)
+            is MainEvents.UpdateProgressBarState -> {
+                updateProgressBarState(value = event.value)
             }
             is MainEvents.UpdatePairedDevice -> {
                 updatePairedDevice(list = event.list)
@@ -49,8 +50,8 @@ class MainViewModel : ViewModel() {
         state.value = state.value.copy(shouldMakeDeviceVisible = value)
     }
 
-    private fun updateIsLoading(value: Boolean) {
-        state.value = state.value.copy(isLoading = value)
+    private fun updateProgressBarState(value: ProgressBarState) {
+        state.value = state.value.copy(progressBarState = value)
     }
 
     private fun updateIsBluetoothOn(value: Boolean) {
