@@ -18,7 +18,8 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
-import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
+import com.razzaghi.bluetoothchat01.presentation.screen.chat.ChatScreen
+import com.razzaghi.bluetoothchat01.presentation.screen.chat.ChatViewModel
 import com.razzaghi.bluetoothchat01.presentation.screen.main.MainScreen
 import com.razzaghi.bluetoothchat01.presentation.screen.main.MainViewModel
 import com.razzaghi.bluetoothchat01.presentation.ui.navigation.MainNavigation
@@ -43,7 +44,7 @@ class MainActivity : BaseActivity() {
                     val navController = rememberAnimatedNavController()
                     AnimatedNavHost(
                         navController = navController,
-                        startDestination = MainNavigation.Main.route,
+                        startDestination = MainNavigation.Chat.route,
                         builder = {
 
                             addMainScreen(
@@ -113,9 +114,9 @@ class MainActivity : BaseActivity() {
     @ExperimentalComposeUiApi
     @ExperimentalAnimationApi
     private fun NavGraphBuilder.addChatScreen(navController: NavHostController, width: Int) {
-/*
+
         composable(
-            route = MainNavigation.Main.route,
+            route = MainNavigation.Chat.route,
             exitTransition = {
                 slideOutHorizontally(
                     targetOffsetX = { -width },
@@ -136,18 +137,16 @@ class MainActivity : BaseActivity() {
             },
         ) {
 
-            val viewModel: MainViewModel = hiltViewModel()
-            MainScreen(
+            val viewModel: ChatViewModel = hiltViewModel()
+            ChatScreen(
                 state = viewModel.state.value,
                 events = viewModel::onTriggerEvent,
-                navigateToMainScreen = {
-                    navController.popBackStack()
-                    navController.navigate("${MainNavigation.Chat.route}")
-                },
-            )
+                chatBluetoothManager = chatBluetoothManager,
+            ){
+                navController.popBackStack()
+            }
         }
 
-        */
     }
 
 

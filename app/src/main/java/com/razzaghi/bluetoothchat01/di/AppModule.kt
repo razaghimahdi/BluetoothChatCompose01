@@ -14,7 +14,6 @@ import com.razzaghi.bluetoothchat01.business.interactors.transfer.InitTransferMe
 import com.razzaghi.bluetoothchat01.business.interactors.transfer.ReadTransferMessagesFromDevicesInteractor
 import com.razzaghi.bluetoothchat01.business.interactors.transfer.WriteTransferMessagesFromDevicesInteractor
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
-import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import dagger.Module

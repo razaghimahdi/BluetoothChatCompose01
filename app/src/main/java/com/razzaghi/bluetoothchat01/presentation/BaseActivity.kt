@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.activity.ComponentActivity
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
-import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
 import javax.inject.Inject
 
 abstract class BaseActivity : ComponentActivity() {

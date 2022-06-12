@@ -40,7 +40,6 @@ import com.razzaghi.bluetoothchat01.business.util.BluetoothTools.getPairedDevice
 import com.razzaghi.bluetoothchat01.presentation.MainActivity
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.BluetoothManagerEvent
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
-import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager02
 import com.razzaghi.bluetoothchat01.presentation.getActivity
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainState
@@ -129,13 +128,6 @@ fun MainScreen(
 
     }
 
-}
-
-fun checkIsLoading(
-    progressBarState01: ProgressBarState,
-    progressBarState02: ProgressBarState,
-): Boolean {
-    return progressBarState01 == ProgressBarState.Loading || progressBarState02 == ProgressBarState.Loading
 }
 
 @Composable
@@ -268,6 +260,13 @@ fun StatelessMainScreen(
     }
 }
 
+fun checkIsLoading(
+    progressBarState01: ProgressBarState,
+    progressBarState02: ProgressBarState,
+): Boolean {
+    return progressBarState01 == ProgressBarState.Loading || progressBarState02 == ProgressBarState.Loading
+}
+
 
 @SuppressLint("MissingPermission")
 private fun connectDevice(
@@ -290,7 +289,7 @@ private fun connectDevice(
 
 
 @Composable
-fun InitLauncherForActivityResult(
+private fun InitLauncherForActivityResult(
     events: (MainEvents) -> Unit,
     bluetoothAdapter: BluetoothAdapter
 ) {
@@ -317,7 +316,7 @@ fun InitLauncherForActivityResult(
 }
 
 
-fun registerBroadCast(activity: Activity, events: (MainEvents) -> Unit) {
+private fun registerBroadCast(activity: Activity, events: (MainEvents) -> Unit) {
     // Register for broadcasts when a device is discovered.
     var filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
     activity.registerReceiver(startBluetoothReceiver(events = events), filter)
@@ -337,7 +336,7 @@ private fun startDiscovery(adapter: BluetoothAdapter) {
     adapter.startDiscovery()
 }
 
-fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastReceiver {
+private fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastReceiver {
     Log.i(TAG, "startBluetoothReceiver: ")
 
     return object : BroadcastReceiver() {
@@ -377,7 +376,7 @@ fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastReceiver {
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun DeviceListItem(device: DeviceData, onSelect: () -> Unit) {
+private fun DeviceListItem(device: DeviceData, onSelect: () -> Unit) {
 
     Card(
         modifier = Modifier
