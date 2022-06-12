@@ -1,5 +1,5 @@
 package com.razzaghi.bluetoothchat01.presentation.bluetooth_manager
-
+/*
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -189,3 +189,4 @@ class ChatBluetoothManager02(
         }
     }
 }
+*/

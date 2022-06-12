@@ -23,7 +23,7 @@ class CloseFromOtherDeviceInteractor {
         try {
             emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
 
-            bluetoothSecureSocket.accept()
+            bluetoothSecureSocket.close()
 
             emit(DataState.Data(ConnectionState.Closed))
         } catch (e: Exception) {

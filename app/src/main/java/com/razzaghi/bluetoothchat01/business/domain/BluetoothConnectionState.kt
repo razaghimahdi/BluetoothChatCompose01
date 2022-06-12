@@ -8,18 +8,6 @@ sealed class BluetoothConnectionState {
         }
     }
 
-    object Listen : BluetoothConnectionState() { // now listening for incoming connections
-        override fun toString(): String {
-            return "Listen"
-        }
-    }
-
-    object Connecting : BluetoothConnectionState() {
-        // now initiating an outgoing connection
-        override fun toString(): String {
-            return "Connecting"
-        }
-    }
 
     object Connected : BluetoothConnectionState() {
         // now connected to a remote device

@@ -8,6 +8,8 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants.MESSAGE_TYPE_RECEIVED
+import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants.MESSAGE_TYPE_SENT
 import com.razzaghi.bluetoothchat01.business.core.Dialog
 import com.razzaghi.bluetoothchat01.business.core.*
 import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
@@ -34,16 +36,16 @@ import java.io.OutputStream
 @SuppressLint("LongLogTag", "MissingPermission")
 class ChatBluetoothManager(
     val bluetoothAdapter: BluetoothAdapter,
-    val closeTransferMessagesFromDevicesInteractor: CloseTransferMessagesFromDevicesInteractor,
-    val initTransferMessagesFromDevicesInteractor: InitTransferMessagesFromDevicesInteractor,
-    val readTransferMessagesFromDevicesInteractor: ReadTransferMessagesFromDevicesInteractor,
-    val writeTransferMessagesFromDevicesInteractor: WriteTransferMessagesFromDevicesInteractor,
-    val closeToOtherDeviceInteractor: CloseToOtherDeviceInteractor,
-    val connectToOtherDeviceInteractor: ConnectToOtherDeviceInteractor,
-    val initConnectToOtherDeviceInteractor: InitConnectToOtherDeviceInteractor,
-    val acceptFromOtherDeviceInteractor: AcceptFromOtherDeviceInteractor,
-    val closeFromOtherDeviceInteractor: CloseFromOtherDeviceInteractor,
-    val initFromOtherDeviceInteractor: InitFromOtherDeviceInteractor,
+    private val closeTransferMessagesFromDevicesInteractor: CloseTransferMessagesFromDevicesInteractor,
+    private val initTransferMessagesFromDevicesInteractor: InitTransferMessagesFromDevicesInteractor,
+    private val readTransferMessagesFromDevicesInteractor: ReadTransferMessagesFromDevicesInteractor,
+    private val writeTransferMessagesFromDevicesInteractor: WriteTransferMessagesFromDevicesInteractor,
+    private val closeToOtherDeviceInteractor: CloseToOtherDeviceInteractor,
+    private val connectToOtherDeviceInteractor: ConnectToOtherDeviceInteractor,
+    private val initConnectToOtherDeviceInteractor: InitConnectToOtherDeviceInteractor,
+    private val acceptFromOtherDeviceInteractor: AcceptFromOtherDeviceInteractor,
+    private val closeFromOtherDeviceInteractor: CloseFromOtherDeviceInteractor,
+    private val initFromOtherDeviceInteractor: InitFromOtherDeviceInteractor,
 ) {
 
     private val TAG = "AppDebug ChatBluetoothImpl"
@@ -56,6 +58,9 @@ class ChatBluetoothManager(
 
     fun onTriggerEvent(event: BluetoothManagerEvent) {
         when (event) {
+            is BluetoothManagerEvent.CloseTransferring -> {
+                closeTransferring(bluetoothSocket = event.bluetoothSocket)
+            }
             is BluetoothManagerEvent.UpdateProgressBarState -> {
                 updateProgressBarState(value = event.value)
             }
@@ -67,6 +72,7 @@ class ChatBluetoothManager(
             is BluetoothManagerEvent.WriteFromTransferring -> {
                 writeFromTransferring(
                     message = event.message,
+                    bluetoothSocket = event.bluetoothSocket,
                 )
             }
             is BluetoothManagerEvent.ConnectToOtherDevice -> {
@@ -94,11 +100,34 @@ class ChatBluetoothManager(
 
     }
 
+    private fun closeTransferring(bluetoothSocket: BluetoothSocket) {
+        closeTransferMessagesFromDevicesInteractor.execute(bluetoothSocket).onEach { dataState ->
+
+            when (dataState) {
+                is DataState.Data -> {
+                    if (dataState.connectionState == ConnectionState.Closed) {
+                        updateBluetoothConnectionState(BluetoothConnectionState.None)
+                        updateActiveBluetoothSocket(bluetoothSocket = null)
+                    }
+                }
+                is DataState.Loading -> {
+                    _state.value =
+                        _state.value.copy(progressBarState = dataState.progressBarState)
+                }
+            }
+
+        }.launchIn(coroutineScope)
+    }
+
+    private fun updateActiveBluetoothSocket(bluetoothSocket: BluetoothSocket?) {
+        _state.value = _state.value.copy(activeBluetoothSocket = bluetoothSocket)
+    }
+
     private fun updateBluetoothConnectionState(bluetoothConnectionState: BluetoothConnectionState) {
         _state.value = _state.value.copy(bluetoothConnectionState = bluetoothConnectionState)
     }
 
-    private fun writeFromTransferring(message: ByteArray) {
+    private fun writeFromTransferring(message: ByteArray, bluetoothSocket: BluetoothSocket) {
 
         writeTransferMessagesFromDevicesInteractor.execute(message, state.outputStream)
             .onEach { dataState ->
@@ -107,8 +136,9 @@ class ChatBluetoothManager(
                     is DataState.Data -> {
                         if (dataState.connectionState != ConnectionState.Failed) {
                             updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                            addedToMessageList(dataState.data)
+                            addedToMessageList(dataState.data, MESSAGE_TYPE_SENT)
                         } else {
+                            onTriggerEvent(BluetoothManagerEvent.CloseTransferring(bluetoothSocket))
                             TransferringMessageHasBeenFailed(FAILED_Write_messages_DIALOG)
                         }
                     }
@@ -128,8 +158,9 @@ class ChatBluetoothManager(
                         is DataState.Data -> {
                             if (dataState.connectionState != ConnectionState.Failed) {
                                 updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                                addedToMessageList(dataState.data)
+                                addedToMessageList(dataState.data, MESSAGE_TYPE_RECEIVED)
                             } else {
+                                onTriggerEvent(BluetoothManagerEvent.CloseTransferring(bluetoothSocket))
                                 TransferringMessageHasBeenFailed(FAILED_Read_messages_DIALOG)
                             }
                         }
@@ -152,6 +183,7 @@ class ChatBluetoothManager(
                 is DataState.Data -> {
 
                     if (dataState.data != null) {
+                        updateActiveBluetoothSocket(bluetoothSocket)
                         updateOutputStream(outputStream = bluetoothSocket.outputStream)
                         updateInputStream(inputStream = bluetoothSocket.inputStream)
                         onFinish()
@@ -322,14 +354,15 @@ class ChatBluetoothManager(
     }
 
 
-    private fun addedToMessageList(message: String?) {
-        val currentList = _state.value?.messagesList ?: arrayListOf()
-        Log.i(TAG, "addedToMessageList message  : " + message)
-        if (message != null) {
-            currentList.add(message)
-        } else {
-            currentList.add("Unknown Message")
-        }
+    private fun addedToMessageList(msg: String?, type: Int) {
+        val currentList = _state.value.messagesList
+        Log.i(TAG, "addedToMessageList message  : " + msg)
+
+        val milliSecondsTime = System.currentTimeMillis()
+        val message = Message(message = msg ?: "", time = milliSecondsTime, type = type)
+
+        currentList.add(message)
+
         _state.value = _state.value.copy(messagesList = currentList)
     }
 

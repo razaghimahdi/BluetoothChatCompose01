@@ -20,7 +20,9 @@ sealed class BluetoothManagerEvent {
 
     data class ReadFromTransferring(val bluetoothSocket: BluetoothSocket) : BluetoothManagerEvent()
 
-    data class WriteFromTransferring(val message: ByteArray) : BluetoothManagerEvent()
+    data class WriteFromTransferring(val message: ByteArray, val bluetoothSocket: BluetoothSocket) : BluetoothManagerEvent()
+
+    data class CloseTransferring(val bluetoothSocket: BluetoothSocket) : BluetoothManagerEvent()
 
     object OnRemoveHeadFromQueue : BluetoothManagerEvent()
 
