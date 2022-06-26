@@ -15,11 +15,11 @@ class ConnectToOtherDeviceInteractor {
     val TAG = "AppDebug ConnectToOtherDeviceInteractor"
 
     @SuppressLint("MissingPermission", "LongLogTag")
-    fun execute(bluetoothSocket: BluetoothSocket) : Flow<DataState<ConnectionState>> = flow{
+    fun execute(bluetoothSocket: BluetoothSocket): Flow<DataState<ConnectionState>> = flow {
         Log.i(TAG, "connect: ")
         try {
             emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
-             bluetoothSocket.connect()
+            bluetoothSocket.connect()
 
             emit(DataState.Data(ConnectionState.Connected))
 
