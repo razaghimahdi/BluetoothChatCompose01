@@ -81,7 +81,8 @@ fun ChatScreen(
 
 
         if (chatBluetoothManager.state.bluetoothConnectionState != BluetoothConnectionState.Connected &&
-            chatBluetoothManager.state.errorQueue.isEmpty()) {
+            chatBluetoothManager.state.errorQueue.isEmpty()
+        ) {
             popBackStack()
         }
 
@@ -109,7 +110,11 @@ fun ChatScreen(
                     modifier = Modifier.weight(1f),
                 )
 
-                UserInputText(state = state, events = events)
+                UserInputText(
+                    state = state,
+                    events = events,
+                    chatBluetoothManager = chatBluetoothManager
+                )
 
             }
         }
@@ -117,6 +122,64 @@ fun ChatScreen(
 
     }
 
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@ExperimentalFoundationApi
+@Composable
+private fun UserInputText(
+    chatBluetoothManager: ChatBluetoothManager,
+    state: ChatState,
+    events: (ChatEvents) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(64.dp)
+            .background(color = blue_400),
+        horizontalArrangement = Arrangement.End
+    ) {
+
+
+        BasicTextField(
+            value = state.chatInput,
+            onValueChange = {
+                events(ChatEvents.UpdateInputChat(it))
+            },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Text,
+                imeAction = ImeAction.Send
+            ),
+            maxLines = 1,
+            cursorBrush = SolidColor(LocalContentColor.current),
+            textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
+        )
+        Card(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .align(Alignment.CenterVertically),
+            onClick = {
+                if (state.chatInput.isNotEmpty()) {
+                    chatBluetoothManager.onTriggerEvent(
+                        BluetoothManagerEvent.WriteFromTransferring(
+                            state.chatInput.toByteArray()
+                        )
+                    )
+                }
+            }
+
+        ) {
+            Icon(
+                imageVector = Icons.Default.Send,
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(6.dp),
+                contentDescription = null
+            )
+        }
+    }
 }
 
 
@@ -288,55 +351,6 @@ fun ClickableMessage(
         modifier = Modifier.padding(16.dp),
     )
 }
-
-@OptIn(ExperimentalMaterialApi::class)
-@ExperimentalFoundationApi
-@Composable
-private fun UserInputText(
-    state: ChatState,
-    events: (ChatEvents) -> Unit,
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
-            .background(color = blue_400),
-        horizontalArrangement = Arrangement.End
-    ) {
-
-
-        BasicTextField(
-            value = state.chatInput,
-            onValueChange = {
-                events(ChatEvents.UpdateInputChat(it))
-            },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Send
-            ),
-            maxLines = 1,
-            cursorBrush = SolidColor(LocalContentColor.current),
-            textStyle = LocalTextStyle.current.copy(color = LocalContentColor.current)
-        )
-        Card(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .align(Alignment.CenterVertically),
-            onClick = {}
-
-        ) {
-            Icon(
-                imageVector = Icons.Default.Send,
-                modifier = Modifier
-                    .size(40.dp)
-                    .padding(6.dp),
-                contentDescription = null
-            )
-        }
-    }
-}
-
 
 
 

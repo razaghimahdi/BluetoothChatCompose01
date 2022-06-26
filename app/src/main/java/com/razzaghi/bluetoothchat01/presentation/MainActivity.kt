@@ -44,7 +44,7 @@ class MainActivity : BaseActivity() {
                     val navController = rememberAnimatedNavController()
                     AnimatedNavHost(
                         navController = navController,
-                        startDestination = MainNavigation.Chat.route,
+                        startDestination = MainNavigation.Main.route,
                         builder = {
 
                             addMainScreen(

@@ -72,7 +72,6 @@ class ChatBluetoothManager(
             is BluetoothManagerEvent.WriteFromTransferring -> {
                 writeFromTransferring(
                     message = event.message,
-                    bluetoothSocket = event.bluetoothSocket,
                 )
             }
             is BluetoothManagerEvent.ConnectToOtherDevice -> {
@@ -127,7 +126,7 @@ class ChatBluetoothManager(
         _state.value = _state.value.copy(bluetoothConnectionState = bluetoothConnectionState)
     }
 
-    private fun writeFromTransferring(message: ByteArray, bluetoothSocket: BluetoothSocket) {
+    private fun writeFromTransferring(message: ByteArray) {
 
         writeTransferMessagesFromDevicesInteractor.execute(message, state.outputStream)
             .onEach { dataState ->
@@ -136,9 +135,15 @@ class ChatBluetoothManager(
                     is DataState.Data -> {
                         if (dataState.connectionState != ConnectionState.Failed) {
                             updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                            addedToMessageList(dataState.data, MESSAGE_TYPE_SENT)
+                            dataState.data?.let { addedToMessageList(it) }
                         } else {
-                            onTriggerEvent(BluetoothManagerEvent.CloseTransferring(bluetoothSocket))
+                            state.activeBluetoothSocket?.let { activeBluetoothSocket ->
+                                onTriggerEvent(
+                                    BluetoothManagerEvent.CloseTransferring(
+                                        activeBluetoothSocket
+                                    )
+                                )
+                            }
                             TransferringMessageHasBeenFailed(FAILED_Write_messages_DIALOG)
                         }
                     }
@@ -158,9 +163,13 @@ class ChatBluetoothManager(
                         is DataState.Data -> {
                             if (dataState.connectionState != ConnectionState.Failed) {
                                 updateBluetoothConnectionState(BluetoothConnectionState.Connected)
-                                addedToMessageList(dataState.data, MESSAGE_TYPE_RECEIVED)
+                                dataState.data?.let { addedToMessageList(it) }
                             } else {
-                                onTriggerEvent(BluetoothManagerEvent.CloseTransferring(bluetoothSocket))
+                                onTriggerEvent(
+                                    BluetoothManagerEvent.CloseTransferring(
+                                        bluetoothSocket
+                                    )
+                                )
                                 TransferringMessageHasBeenFailed(FAILED_Read_messages_DIALOG)
                             }
                         }
@@ -354,12 +363,9 @@ class ChatBluetoothManager(
     }
 
 
-    private fun addedToMessageList(msg: String?, type: Int) {
+    private fun addedToMessageList(message: Message) {
         val currentList = _state.value.messagesList
-        Log.i(TAG, "addedToMessageList message  : " + msg)
-
-        val milliSecondsTime = System.currentTimeMillis()
-        val message = Message(message = msg ?: "", time = milliSecondsTime, type = type)
+        Log.i(TAG, "addedToMessageList message  : " + message)
 
         currentList.add(message)
 

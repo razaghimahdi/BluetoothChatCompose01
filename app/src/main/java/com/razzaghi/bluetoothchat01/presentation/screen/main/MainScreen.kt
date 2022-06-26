@@ -360,7 +360,7 @@ private fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastRecei
                     val deviceData = DeviceData(deviceName, deviceHardwareAddress)
                     devicesList.add(deviceData)
                 }
-                events(MainEvents.UpdateSearchedDevice(devicesList))
+                events(MainEvents.UpdateSearchedDevice(devicesList)) // TODO(needs to check)
 
             }
 
