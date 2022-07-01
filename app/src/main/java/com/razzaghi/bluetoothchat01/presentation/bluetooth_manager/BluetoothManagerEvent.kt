@@ -18,6 +18,7 @@ sealed class BluetoothManagerEvent {
     data class ConnectFromOtherDevice(val bluetoothAdapter: BluetoothAdapter ) :
         BluetoothManagerEvent()
 
+
     data class ReadFromTransferring(val bluetoothSocket: BluetoothSocket) : BluetoothManagerEvent()
 
     data class WriteFromTransferring(val message: ByteArray ) : BluetoothManagerEvent()

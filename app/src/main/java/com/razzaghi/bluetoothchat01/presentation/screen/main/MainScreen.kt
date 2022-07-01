@@ -23,6 +23,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,6 +42,7 @@ import com.razzaghi.bluetoothchat01.presentation.MainActivity
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.BluetoothManagerEvent
 import com.razzaghi.bluetoothchat01.presentation.bluetooth_manager.ChatBluetoothManager
 import com.razzaghi.bluetoothchat01.presentation.getActivity
+import com.razzaghi.bluetoothchat01.presentation.screen.main.component.DeviceListItem
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
 import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainState
 import com.razzaghi.bluetoothchat01.presentation.ui.component.CustomSpacer
@@ -139,7 +141,11 @@ fun StatelessMainScreen(
     Box {
         Column() {
 
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
                 Button(onClick = {
                     events(MainEvents.UpdateProgressBarState(ProgressBarState.Loading))
                     events(MainEvents.UpdateShouldBluetoothStartScan(true))
@@ -163,7 +169,7 @@ fun StatelessMainScreen(
                         state.searchedDevices.isNotEmpty()
             ) {
                 LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(4.dp),
                 ) {
 
                     item {
@@ -275,7 +281,6 @@ private fun connectDevice(
     connectCallback: (BluetoothDevice, Boolean) -> Unit
 ) {
 
-    Log.i(TAG, "connectDevice deviceData: " + deviceData)
 
     // Cancel discovery because it's costly and we're about to connect
     bluetoothAdapter.cancelDiscovery()
@@ -337,7 +342,6 @@ private fun startDiscovery(adapter: BluetoothAdapter) {
 }
 
 private fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastReceiver {
-    Log.i(TAG, "startBluetoothReceiver: ")
 
     return object : BroadcastReceiver() {
 
@@ -371,24 +375,5 @@ private fun startBluetoothReceiver(events: (MainEvents) -> Unit): BroadcastRecei
             }
         }
     }
-}
-
-
-@OptIn(ExperimentalMaterialApi::class)
-@Composable
-private fun DeviceListItem(device: DeviceData, onSelect: () -> Unit) {
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp), onClick = onSelect
-    ) {
-
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(text = device.deviceName, modifier = Modifier.padding(12.dp))
-        }
-    }
-
-
 }
 

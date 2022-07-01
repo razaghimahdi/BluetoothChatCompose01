@@ -1,6 +1,7 @@
 package com.razzaghi.bluetoothchat01.presentation.bluetooth_manager
 
 import android.bluetooth.BluetoothSocket
+import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants.DEFAULT_INPUT_STREAM
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants.DEFAULT_OUTPUT_STREAM
 import com.razzaghi.bluetoothchat01.business.core.Dialog

@@ -12,7 +12,7 @@ object BluetoothTools {
     @SuppressLint("MissingPermission")
     fun getPairedDevices(bluetoothAdapter: BluetoothAdapter): ArrayList<DeviceData> {
 
-        Log.i(TAG, "getPairedDevices: ")
+        // Log.i(TAG, "getPairedDevices: ")
 
         // Get a set of currently paired devices
         val pairedDevices = bluetoothAdapter.bondedDevices
@@ -22,14 +22,14 @@ object BluetoothTools {
             if (pairedDevices.isNotEmpty()) {
                 // There are paired devices. Get the name and address of each paired device.
                 for (device in pairedDevices) {
-                    Log.i(TAG, "getPairedDevices device: "+device.toString())
+                   // Log.i(TAG, "getPairedDevices device: "+device.toString())
                     val deviceName = device.name
                     val deviceHardwareAddress = device.address // MAC address
                     mPairedDeviceList.add(DeviceData(deviceName, deviceHardwareAddress))
                 }
             }
         }
-        Log.i(TAG, "getPairedDevices mPairedDeviceList: "+mPairedDeviceList)
+       // Log.i(TAG, "getPairedDevices mPairedDeviceList: "+mPairedDeviceList)
 
         return mPairedDeviceList
     }
