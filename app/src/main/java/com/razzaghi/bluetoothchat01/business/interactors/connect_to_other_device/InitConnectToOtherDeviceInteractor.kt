@@ -28,6 +28,7 @@ class InitConnectToOtherDeviceInteractor {
         try {
             emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
 
+
             // Always cancel discovery because it will slow down a connection
             bluetoothAdapter.cancelDiscovery()
 

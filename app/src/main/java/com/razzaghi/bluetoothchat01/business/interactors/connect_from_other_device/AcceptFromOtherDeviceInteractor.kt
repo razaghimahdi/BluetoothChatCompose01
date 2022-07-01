@@ -21,18 +21,19 @@ class AcceptFromOtherDeviceInteractor {
     fun execute(bluetoothServerSocket: BluetoothServerSocket) : Flow<DataState<BluetoothSocket>> = flow{
         Log.i(TAG, "execute: ")
         try {
-            emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
+           // emit(DataState.Loading(progressBarState = ProgressBarState.Loading)) no loading need here
 
             val bluetoothSocket = bluetoothServerSocket.accept()
+
 
             emit(DataState.Data(ConnectionState.Connected, bluetoothSocket))
 
         } catch (e: Exception) {
             Log.i(TAG, "execute e: " + e.message)
             emit(DataState.Data(ConnectionState.Failed))
-        } finally {
+        }/* finally {
             emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
-        }
+        }*/
     }
 
 

@@ -24,14 +24,14 @@ class InitTransferMessagesFromDevicesInteractor {
     ) : Flow<DataState<BluetoothSocket>> = flow{
         Log.i(TAG, "execute: ")
         try {
-            emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
+           // emit(DataState.Loading(progressBarState = ProgressBarState.Loading)) no loading need here
 
             emit(DataState.Data(ConnectionState.Inited, bluetoothSocket))
         } catch (e: Exception) {
             Log.i(TAG, "execute e: " + e.message)
             emit(DataState.Data(ConnectionState.Failed))
-        }finally {
+        }/*finally {
             emit(DataState.Loading(progressBarState = ProgressBarState.Idle))
-        }
+        }*/
     }
 }

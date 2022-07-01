@@ -28,7 +28,9 @@ class WriteTransferMessagesFromDevicesInteractor {
     ): Flow<DataState<Message>> = flow {
         Log.i(TAG, "execute: ")
         try {
+
             emit(DataState.Loading(progressBarState = ProgressBarState.Loading))
+
             outputStream.write(buffer)
 
             val msg = buffer.toCustomString()
