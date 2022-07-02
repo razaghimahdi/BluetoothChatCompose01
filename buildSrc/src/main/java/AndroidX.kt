@@ -10,8 +10,8 @@ object AndroidX {
     const val lifecycleVmKtx = "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycleVmKtxVersion"
 
 
-    private const val datastoreVersion = "1.0.0-rc01"
-    const val datastore = "androidx.datastore:datastore-preferences:$datastoreVersion"
+    private const val multidexVersion = "2.0.1"
+    const val multidex = "androidx.multidex:multidex:$multidexVersion"
 
 
 

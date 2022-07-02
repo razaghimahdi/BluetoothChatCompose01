@@ -51,14 +51,10 @@ android {
 
 dependencies {
 
-
-
-    implementation Accompanist.animations
-    implementation Accompanist.permissions
-    implementation AndroidX.datastore
     implementation AndroidX.coreKtx
     implementation AndroidX.appCompat
     implementation AndroidX.lifecycleVmKtx
+    implementation AndroidX.multidex
     implementation Compose.activity
     implementation Compose.ui
     implementation Compose.material
@@ -67,18 +63,11 @@ dependencies {
     implementation Compose.hiltNavigation
     implementation Compose.icon
     implementation Google.material
+    implementation Accompanist.animations
+    implementation Accompanist.permissions
     implementation Hilt.android
     implementation Kotlinx.serialization
     kapt Hilt.compiler
-
-
-    androidTestImplementation(AndroidXTest.runner)
-    androidTestImplementation(ComposeTest.uiTestJunit4)
-    debugImplementation(ComposeTest.uiTestManifest)
-    androidTestImplementation(HiltTest.hiltAndroidTesting)
-    kaptAndroidTest(Hilt.compiler)
-    androidTestImplementation(Junit.junit4) 
-    implementation 'androidx.multidex:multidex:2.0.1'
 
 
 
