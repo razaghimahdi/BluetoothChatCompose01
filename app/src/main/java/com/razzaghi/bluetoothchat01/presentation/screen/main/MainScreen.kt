@@ -10,7 +10,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
@@ -18,8 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Button
-import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -32,10 +29,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.PermissionStatus
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
-import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
+import com.razzaghi.bluetoothchat01.business.core.BluetoothConnectionState
 import com.razzaghi.bluetoothchat01.business.domain.DeviceData
 import com.razzaghi.bluetoothchat01.business.util.BluetoothTools.getPairedDevices
 import com.razzaghi.bluetoothchat01.presentation.MainActivity

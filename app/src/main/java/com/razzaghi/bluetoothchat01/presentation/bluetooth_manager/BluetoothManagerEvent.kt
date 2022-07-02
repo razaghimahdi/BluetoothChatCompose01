@@ -4,8 +4,6 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
-import com.razzaghi.bluetoothchat01.business.domain.BluetoothConnectionState
-import com.razzaghi.bluetoothchat01.presentation.screen.main.state.MainEvents
 
 sealed class BluetoothManagerEvent {
 

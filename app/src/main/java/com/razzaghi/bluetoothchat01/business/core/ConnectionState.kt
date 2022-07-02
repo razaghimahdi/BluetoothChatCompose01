@@ -1,4 +1,4 @@
-package com.razzaghi.bluetoothchat01.business.domain
+package com.razzaghi.bluetoothchat01.business.core
 
 sealed class ConnectionState{
 

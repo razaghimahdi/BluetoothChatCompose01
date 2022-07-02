@@ -3,13 +3,11 @@ package com.razzaghi.bluetoothchat01.business.interactors.connect_from_other_dev
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothServerSocket
-import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.razzaghi.bluetoothchat01.business.constatnts.BluetoothConstants
 import com.razzaghi.bluetoothchat01.business.core.DataState
 import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
-import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
-import kotlinx.coroutines.CoroutineScope
+import com.razzaghi.bluetoothchat01.business.core.ConnectionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.lang.Exception

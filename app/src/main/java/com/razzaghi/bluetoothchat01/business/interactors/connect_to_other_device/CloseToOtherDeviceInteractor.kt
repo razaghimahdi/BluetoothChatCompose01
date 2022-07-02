@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothSocket
 import android.util.Log
 import com.razzaghi.bluetoothchat01.business.core.DataState
 import com.razzaghi.bluetoothchat01.business.core.ProgressBarState
-import com.razzaghi.bluetoothchat01.business.domain.ConnectionState
+import com.razzaghi.bluetoothchat01.business.core.ConnectionState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.lang.Exception
