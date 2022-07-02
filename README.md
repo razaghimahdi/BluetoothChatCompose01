@@ -10,15 +10,26 @@
 
 
 ### BluetoothAdapter:
-Represents the local device Bluetooth adapter. The BluetoothAdapter lets you perform fundamental Bluetooth tasks, such as initiate device discovery, query a list of bonded (paired) devices, instantiate a BluetoothDevice using a known MAC address, and create a BluetoothServerSocket to listen for connection requests from other devices, and start a scan for Bluetooth LE devices.
+Represents the local device Bluetooth adapter. 
+
+The BluetoothAdapter lets you perform fundamental Bluetooth tasks,
+such as initiate device discovery, query a list of bonded (paired) devices, 
+instantiate a BluetoothDevice using a known MAC address, 
+and create a BluetoothServerSocket to listen for connection requests from other devices, 
+and start a scan for Bluetooth LE devices.
+
 To get a BluetoothAdapter representing the local Bluetooth adapter, call the BluetoothManager#getAdapter function on BluetoothManager. 
+
 On JELLY_BEAN_MR1 and below you will need to use the static getDefaultAdapter() method instead.
+
 Fundamentally, this is your starting point for all Bluetooth actions. 
+
 Once you have the local adapter, you can get a set of BluetoothDevice objects representing all paired devices with getBondedDevices(); 
 start device discovery with startDiscovery(); 
 or create a BluetoothServerSocket to listen for incoming RFComm connection requests with listenUsingRfcommWithServiceRecord(java.lang.String, java.util.UUID); 
 listen for incoming L2CAP Connection-oriented Channels (CoC) connection requests with listenUsingL2capChannel(); 
 or start a scan for Bluetooth LE devices with startLeScan(android.bluetooth.BluetoothAdapter.LeScanCallback).
+
 This class is thread safe.
 
 ### BluetoothSocket:
