@@ -100,5 +100,5 @@ In particular, close() will always immediately abort ongoing operations and clos
 
 
 
-#### **ideas**:
+#### **Ideas**:
 https://developer.android.com
