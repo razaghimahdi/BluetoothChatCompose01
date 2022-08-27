@@ -1,7 +1,7 @@
 # BluetoothChatCompose01
 ## Developed by Mahdi Razzaghi Ghaleh
 ## Still working on it...
-#### Simple chat application by bluetooth socket in jetpack compose and MVI Architecture, Which is not finished yet since it has some small issues
+#### **Simple chat application by bluetooth socket in jetpack compose and MVI Architecture, Which is not finished yet since it has some small issues**
 
 
 | Main Screen | Chat Screen |  
