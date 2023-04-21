@@ -6,7 +6,7 @@
 
 | Main Screen | Chat Screen |  
 | :---: | :---: | 
-| ![](screenshots/1.jpg) | ![](screenshots/2.jpg)  | 
+| <img src="screenshots/1.jpg" width="300"/> | <img src="screenshots/2.jpg" width="300"/>  | 
 
 
 ### BluetoothAdapter:
