@@ -3,6 +3,8 @@
 ## Still working on it...
 #### **Simple chat application by bluetooth socket in jetpack compose and MVI Architecture, Which is not finished yet since it has some small issues**
 
+## Give a Star! ⭐
+If you like or are using this project to learn or start your solution, please give it a star. Thanks!
 
 | Main Screen | Chat Screen |  
 | :---: | :---: | 
